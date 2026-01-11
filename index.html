@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SARAVEDA 🕉️</title>
+
+<style>
+*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+body{margin:0;background:#f4f6fb;color:#222}
+header{background:#1e3d59;color:#fff;padding:15px;text-align:center}
+nav{display:flex;justify-content:space-around;background:#3e5c76}
+nav button{flex:1;border:none;background:none;color:#fff;padding:12px;cursor:pointer}
+nav button:hover{background:#2a4763}
+.tab{display:none;padding:20px}
+.active{display:block}
+.card{background:#fff;padding:20px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,.1);margin-bottom:20px}
+input,button{padding:10px;width:100%;margin-top:10px}
+button.main{background:#1e3d59;color:#fff;border:none;border-radius:6px}
+.dark{background:#121212;color:#eee}
+.dark .card{background:#1e1e1e;color:#eee}
+iframe{border:none;border-radius:8px}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>SARAVEDA 🕉️</h1>
+  <p>Divine Focus · JEE / NEET Study</p>
+</header>
+
+<!-- LOGIN -->
+<div id="login" class="tab active">
+  <div class="card">
+    <h2>Login</h2>
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Create / Enter Password">
+    <button class="main" onclick="login()">Unlock</button>
+    <p style="font-size:13px;opacity:.7">Password is mandatory</p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="tab">
+
+<nav>
+  <button onclick="showTab('home')">Home</button>
+  <button onclick="showTab('pomodoro')">Pomodoro</button>
+  <button onclick="showTab('youtube')">YouTube Study</button>
+  <button onclick="showTab('apps')">Study Apps</button>
+  <button onclick="toggleTheme()">🌙</button>
+</nav>
+
+<!-- HOME -->
+<div id="home" class="tab active">
+  <div class="card">
+    <h3>📿 Bhagavad Gita</h3>
+    <p><b>कर्मण्येवाधिकारस्ते</b></p>
+    <p>You have the right to perform your duty.</p>
+  </div>
+</div>
+
+<!-- POMODORO -->
+<div id="pomodoro" class="tab">
+  <div class="card">
+    <h3>🍅 Pomodoro</h3>
+    <h1 id="timer">25:00</h1>
+    <button class="main" onclick="startPomodoro()">Start</button>
+    <button onclick="resetPomodoro()">Reset</button>
+  </div>
+</div>
+
+<!-- YOUTUBE -->
+<div id="youtube" class="tab">
+  <div class="card">
+    <h3>📺 YouTube Study (JEE / NEET)</h3>
+
+    <button class="main" onclick="autoYT()">Auto Study Video</button>
+
+    <input id="ytQuery" placeholder="Manual search (JEE / NEET only)">
+    <button onclick="manualYT()">Search</button>
+
+    <p id="ytInfo" style="font-size:13px;opacity:.7"></p>
+
+    <iframe id="ytFrame" width="100%" height="360"></iframe>
+  </div>
+</div>
+
+<!-- STUDY APPS -->
+<div id="apps" class="tab">
+  <div class="card">
+    <h3>📱 Study Apps</h3>
+    <button onclick="openApp('https://classroom.google.com')">Google Classroom</button>
+    <button onclick="openApp('https://www.notion.so')">Notion</button>
+    <button onclick="openApp('https://www.khanacademy.org')">Khan Academy</button>
+    <button onclick="openApp('https://www.desmos.com/calculator')">Desmos</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+/* BASIC NAV */
+function showTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+}
+
+/* LOGIN + PASSWORD LOCK */
+function login(){
+  const email = email.value;
+  const pass = password.value;
+  if(!email || !pass) return alert("Enter email & password");
+  localStorage.setItem("saraveda_user", email);
+  localStorage.setItem("saraveda_pass", pass);
+  document.getElementById("login").style.display="none";
+  document.getElementById("dashboard").style.display="block";
+}
+
+/* THEME */
+function toggleTheme(){
+  document.body.classList.toggle("dark");
+}
+
+/* POMODORO */
+let t=1500, intv;
+function startPomodoro(){
+  if(intv) return;
+  intv=setInterval(()=>{
+    t--;
+    let m=Math.floor(t/60), s=t%60;
+    timer.innerText=`${m}:${s<10?'0'+s:s}`;
+    if(t<=0){clearInterval(intv);intv=null;stopYT();alert("Break time")}
+  },1000)
+}
+function resetPomodoro(){
+  clearInterval(intv);intv=null;t=1500;timer.innerText="25:00";
+}
+
+/* YOUTUBE */
+const JEE_NEET = [
+  "jee physics electrostatics",
+  "jee chemistry thermodynamics",
+  "jee maths calculus",
+  "neet biology cell",
+  "neet physics motion"
+];
+let ytTimer, ytUsed=0, ytMax=25*60;
+
+function loadYT(q){
+  ytFrame.src="https://www.youtube-nocookie.com/embed?listType=search&list="+encodeURIComponent(q);
+  startYTTimer();
+}
+
+function autoYT(){
+  const q = JEE_NEET[Math.floor(Math.random()*JEE_NEET.length)];
+  loadYT(q);
+}
+
+function manualYT(){
+  const q = ytQuery.value.toLowerCase();
+  if(!q.includes("jee") && !q.includes("neet"))
+    return alert("Only JEE / NEET topics allowed");
+  loadYT(q);
+}
+
+function startYTTimer(){
+  clearInterval(ytTimer); ytUsed=0;
+  ytTimer=setInterval(()=>{
+    ytUsed++;
+    ytInfo.innerText="⏱ Time left: "+Math.max(0,Math.floor((ytMax-ytUsed)/60))+" min";
+    if(ytUsed>=ytMax) stopYT();
+  },1000);
+}
+
+function stopYT(){
+  clearInterval(ytTimer);
+  ytFrame.src="";
+  ytInfo.innerText="YouTube closed. Back to study.";
+}
+
+/* APPS */
+function openApp(u){window.open(u,"_blank");}
+</script>
+
+</body>
+</html>
